@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090d24" />
+  <title>给你的一场星光生日会</title>
+  <style>
+    :root {
+      --ink: #fff8f8;
+      --muted: #c8c7df;
+      --rose: #ff9eb7;
+      --peach: #ffd0b6;
+      --violet: #a99bff;
+      --line: rgba(255,255,255,.18);
+      --glass: rgba(15, 17, 55, .55);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      background: #070a1d;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    button { font: inherit; }
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100svh;
+      min-height: 620px;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(ellipse at 50% 115%, rgba(255, 126, 177, .2), transparent 47%),
+        radial-gradient(ellipse at 18% 15%, rgba(101, 105, 232, .16), transparent 42%),
+        linear-gradient(165deg, #07091d 0%, #11143d 48%, #1a163d 100%);
+    }
+    .scene::before {
+      content: "";
+      position: absolute; inset: 0;
+      z-index: -1;
+      background: radial-gradient(circle at 50% 35%, transparent 0 24%, rgba(6,8,25,.3) 72%);
+      pointer-events: none;
+    }
+    #backgroundVideo { position:absolute; inset:0; z-index:-4; width:100%; height:100%; object-fit:cover; pointer-events:none; filter:brightness(.64) saturate(1.22); }
+    #sky, #meteors, #sparkles { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+    #sky { z-index: -3; }
+    #meteors { z-index: -1; }
+    #sparkles { z-index: 6; }
+    .moon {
+      position: absolute; top: 11vh; right: 13vw;
+      width: clamp(74px, 10vw, 126px); aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 34% 30%, #fffef7 0 14%, #fff4da 34%, #ffd9bc 68%, #ffb8bf 100%);
+      box-shadow: 0 0 34px rgba(255,226,202,.68), 0 0 110px rgba(255,161,188,.22);
+      opacity: .94;
+    }
+    .moon::after {
+      content:""; position:absolute; inset: 13% 6% 8% 33%; border-radius:50%;
+      background: rgba(186,128,150,.12); filter: blur(2px); transform: rotate(-22deg);
+    }
+    .horizon {
+      position: absolute; left: -5%; right: -5%; bottom: -2px; height: 24vh; min-height: 150px;
+      background: linear-gradient(to top, #050618 2%, rgba(9,8,31,.94) 47%, transparent);
+      clip-path: polygon(0 80%, 8% 68%, 14% 73%, 22% 51%, 31% 71%, 38% 58%, 45% 72%, 54% 47%, 62% 70%, 68% 59%, 77% 77%, 86% 54%, 94% 71%, 100% 61%, 100% 100%, 0 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .topbar {
+      position: absolute; z-index: 5; top: 22px; left: 28px; right: 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.65);
+    }
+    .brand { display:flex; align-items:center; gap: 10px; }
+    .brand-mark { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); box-shadow: 0 0 14px var(--rose); }
+    .sound-toggle {
+      display:flex; align-items:center; gap: 8px; border: 1px solid var(--line); color: var(--ink);
+      background: rgba(8, 10, 31, .35); border-radius: 999px; padding: 9px 13px; cursor:pointer;
+      transition: .25s ease; backdrop-filter: blur(12px);
+    }
+    .sound-toggle:hover { border-color: rgba(255,255,255,.42); transform: translateY(-1px); }
+    .sound-icon { position: relative; width: 14px; height: 13px; display:flex; align-items:flex-end; gap:2px; }
+    .sound-icon i { display:block; width:2px; border-radius:3px; background:var(--rose); animation: equalize 1s ease-in-out infinite alternate; }
+    .sound-icon i:nth-child(1){height:5px;animation-delay:-.35s}.sound-icon i:nth-child(2){height:10px}.sound-icon i:nth-child(3){height:7px;animation-delay:-.15s}
+    .sound-toggle.off .sound-icon i { animation-play-state: paused; height: 2px; opacity: .55; }
+    @keyframes equalize { to { transform:scaleY(.35); } }
+    .content {
+      position: relative; z-index: 3; width: min(1060px, calc(100% - 48px)); height: 100%; margin: 0 auto;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .panel { width: min(790px, 100%); margin-top: 3vh; text-align:center; transition: opacity .5s ease, transform .65s cubic-bezier(.22,.75,.24,1); }
+    .panel.is-hidden { opacity:0; pointer-events:none; transform: translateY(28px); position:absolute; }
+    .eyebrow { display:flex; align-items:center; justify-content:center; gap: 12px; color: var(--peach); font-size: 12px; letter-spacing: .32em; text-transform: uppercase; }
+    .eyebrow::before, .eyebrow::after { content:""; width: 45px; height:1px; background: linear-gradient(90deg, transparent, rgba(255,205,185,.6)); }
+    .eyebrow::after { transform: rotate(180deg); }
+    h1 { margin: 20px 0 12px; font-size: clamp(40px, 7vw, 82px); line-height: .98; letter-spacing: .02em; font-weight: 650; text-shadow: 0 0 34px rgba(255,147,183,.2); }
+    .title-accent { color: var(--rose); font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 500; }
+    .lede { max-width: 560px; margin: 0 auto; color: var(--muted); font-size: clamp(14px, 2.2vw, 18px); line-height:1.9; }
+    .cta {
+      margin-top: 32px; display:inline-flex; align-items:center; gap: 12px; padding: 14px 22px 14px 24px;
+      border: 1px solid rgba(255,180,190,.6); border-radius: 999px; color:#21152e; background: linear-gradient(100deg, #ffd8c4, #ff9eb7);
+      box-shadow: 0 10px 35px rgba(255, 126, 177, .18); cursor:pointer; font-weight: 650; transition:.28s ease;
+    }
+    .cta:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(255,126,177,.32); }
+    .cta .arrow { font-size: 20px; line-height: 1; transition: transform .25s ease; }
+    .cta:hover .arrow { transform: translateX(4px); }
+    .hint { margin-top: 18px; color: rgba(255,255,255,.48); font-size: 12px; }
+    .letter-wrap { display:grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items:stretch; text-align:left; width:min(760px, 100%); margin:0 auto; }
+    .letter-card, .wish-card { border:1px solid var(--line); background: var(--glass); border-radius: 20px; backdrop-filter: blur(18px); box-shadow: 0 22px 70px rgba(0,0,0,.22); }
+    .letter-card { padding: clamp(24px, 4vw, 40px); text-align:center; }
+    .letter-kicker { color:var(--rose); font-size: 12px; letter-spacing:.2em; text-transform:uppercase; }
+    .letter-card h2 { margin: 14px 0 18px; font-size: clamp(26px, 4vw, 40px); line-height:1.16; font-weight:600; }
+    .letter-card p { margin: 0; color:#e1ddf0; line-height: 2; font-size: 15px; }
+    .signature { margin-top: 22px; color: var(--peach); font-family: Georgia, serif; font-style: italic; font-size: 22px; }
+    .wish-card { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height: 150px; padding: 18px 22px; text-align:center; }
+    .wish-star { position:absolute; top:18%; right:17%; z-index:4; width:92px; height:92px; padding:0; border:0; color:#ffe8c9; background:transparent; cursor:pointer; transition:opacity .55s ease, transform .55s ease; }
+    .wish-star.hidden-star { opacity:0; pointer-events:none; transform:scale(.45); }
+    .star-shape { display:block; width:52px; height:52px; margin:0 auto 5px; background:linear-gradient(145deg,#fffdf1 4%,#ffd4a7 52%,#ff9eb7 100%); clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 56%,79% 93%,50% 70%,21% 93%,32% 56%,2% 35%,39% 35%); filter:drop-shadow(0 0 10px rgba(255,224,171,.95)) drop-shadow(0 0 26px rgba(255,139,185,.72)); animation: starPulse 2.2s ease-in-out infinite; }
+    .wish-star:hover .star-shape { animation:none; transform:scale(1.16); }
+    .wish-star.twinkle .star-shape { animation:twinkle .7s ease-in-out 2; }
+    .star-label { display:block; color:rgba(255,245,240,.72); font-size:11px; letter-spacing:.15em; white-space:nowrap; text-shadow:0 1px 10px #060819; }
+    @keyframes starPulse { 50% { transform:scale(1.08); filter:drop-shadow(0 0 15px rgba(255,224,171,1)) drop-shadow(0 0 32px rgba(255,139,185,.8)); } }
+    @keyframes twinkle { 50% { transform:scale(1.35) rotate(12deg); } }
+    .wish-title { margin-top: 24px; font-weight:600; font-size:18px; }
+    .wish-note { margin-top:8px; color:var(--muted); font-size:13px; line-height:1.7; }
+    .progress { position: absolute; left:50%; bottom: 28px; transform:translateX(-50%); display:flex; align-items:center; gap:9px; z-index:4; }
+    .dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.3); transition:.3s ease; }
+    .dot.active { width:24px; border-radius:99px; background:var(--rose); box-shadow:0 0 12px rgba(255,158,183,.7); }
+    .subtitle { position:absolute; z-index:5; left:50%; bottom: 74px; transform:translateX(-50%); width:min(620px, calc(100% - 44px)); text-align:center; color:#fff; font-size: clamp(14px, 2.2vw, 18px); letter-spacing:.08em; text-shadow:0 2px 15px #000; opacity:0; pointer-events:none; }
+    .subtitle.show { animation: subtitleIn .9s ease forwards; }
+    @keyframes subtitleIn { from { opacity:0; transform:translate(-50%,10px); } to { opacity:1; transform:translate(-50%,0); } }
+    .toast { position:absolute; top: 82px; left:50%; transform:translate(-50%,-14px); opacity:0; z-index:10; padding: 11px 16px; color:#231526; background: #ffe0d8; border-radius: 999px; font-size: 13px; box-shadow: 0 10px 35px rgba(0,0,0,.25); transition:.4s ease; pointer-events:none; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    @media (max-width: 700px) {
+      .scene { min-height: 560px; }
+      .topbar { left:18px; right:18px; top:16px; }
+      .brand { font-size:10px; letter-spacing:.16em; }
+      .sound-toggle { padding: 8px 10px; font-size:11px; }
+      .content { width:calc(100% - 32px); }
+      .panel { margin-top:-3vh; }
+      .letter-wrap { gap: 12px; }
+      .letter-card { padding: 23px; }
+      .wish-card { min-height: 150px; padding: 18px; }
+      .wish-title { margin-top: 7px; font-size:15px; }
+      .wish-note { font-size:12px; }
+      .moon { top: 13vh; right: 8vw; }
+      .subtitle { bottom: 62px; }
+      .progress { bottom: 19px; }
+    }
+    @media (max-width: 700px) and (max-height: 650px) {
+      .content { align-items:flex-start; padding-top:70px; padding-bottom:46px; overflow-y:auto; }
+      .panel { margin-top:0; }
+      .letter-card { padding:18px; }
+      .letter-card h2 { margin:10px 0 12px; font-size:27px; }
+      .letter-card p { font-size:13px; line-height:1.62; }
+      .signature { margin-top:12px; font-size:19px; }
+      .wish-card { min-height:138px; }
+      .wish-title { margin-top:1px; }
+      .wish-star { top:17%; right:9%; width:68px; height:68px; }
+      .star-shape { width:39px; height:39px; }
+      .star-label { font-size:9px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *,*::before,*::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene" id="scene">
+    <video id="backgroundVideo" autoplay loop muted playsinline preload="auto" aria-hidden="true">
+      <source src="./video.mp4" type="video/mp4" />
+    </video>
+    <audio id="backgroundAudio" loop preload="auto" aria-hidden="true">
+      <source src="./music.mp3" type="audio/mpeg" />
+    </audio>
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <canvas id="meteors" aria-hidden="true"></canvas>
+    <canvas id="sparkles" aria-hidden="true"></canvas>
+    <div class="moon" aria-hidden="true"></div>
+    <div class="horizon" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"></span><span>TONIGHT, JUST FOR YOU</span></div>
+      <button class="sound-toggle off" id="soundToggle" type="button" aria-label="播放或暂停背景音乐" aria-pressed="false">
+        <span class="sound-icon" aria-hidden="true"><i></i><i></i><i></i></span><span id="soundText">播放音乐</span>
+      </button>
+    </header>
+    <div class="content">
+      <section class="panel" id="introPanel" aria-label="生日祝福开场">
+        <div class="eyebrow">A little universe for you</div>
+        <h1>今夜，<br><span class="title-accent">星光为你闪烁</span></h1>
+        <p class="lede">让每一颗流星替我奔向你。<br>点击按钮，进入只属于 TYT 的生日祝福。</p>
+        <button class="cta" id="startButton" type="button">进入生日祝福 <span class="arrow">→</span></button>
+        <div class="hint">建议打开声音 · 流星雨正在为你落下</div>
+      </section>
+
+      <section class="panel is-hidden" id="letterPanel" aria-label="生日情书">
+        <div class="letter-wrap">
+          <article class="letter-card">
+            <div class="letter-kicker">A message written in starlight</div>
+            <h2><span class="title-accent">TYT</span> 生日快乐</h2>
+            <p>愿你新的一岁，眼里有光，心中有爱，走过的每一步都被温柔回应。</p>
+            <p style="margin-top:12px">愿你想要的都拥有，得不到的都释怀；愿每一次抬头，都能看见属于你的璀璨星河。</p>
+            <p style="margin-top:12px">谢谢你来到我的世界。以后的生日和流星雨，我都想陪你一起看。</p>
+            <div class="signature">永远爱你的那个人</div>
+          </article>
+          <aside class="wish-card">
+            <div class="wish-title">许一个只属于你的愿望</div>
+            <div class="wish-note" id="wishNote">点击夜空里最亮的星星，愿望会被听见。</div>
+          </aside>
+        </div>
+      </section>
+    </div>
+    <button class="wish-star hidden-star" id="wishStar" type="button" aria-label="点击夜空的星星许愿">
+      <span class="star-shape" aria-hidden="true"></span>
+      <span class="star-label">点亮心愿</span>
+    </button>
+    <div class="subtitle" id="subtitle" aria-live="polite"></div>
+    <div class="progress" aria-label="祝福进度"><span class="dot active"></span><span class="dot"></span></div>
+    <div class="toast" id="toast" role="status">愿你所有的愿望，都有回音。</div>
+  </main>
+  <script>
+    (() => {
+      const $ = (s) => document.querySelector(s);
+      const scene = $('#scene');
+      const sky = $('#sky'), skyCtx = sky.getContext('2d');
+      const meteors = $('#meteors'), meteorCtx = meteors.getContext('2d');
+      const sparkles = $('#sparkles'), sparkleCtx = sparkles.getContext('2d');
+      const backgroundVideo = $('#backgroundVideo');
+      const backgroundAudio = $('#backgroundAudio');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let width = 0, height = 0, stars = [], shootingStars = [], sparklesList = [], started = false, lastPointer = null;
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function resize() {
+        width = scene.clientWidth; height = scene.clientHeight;
+        [sky, meteors, sparkles].forEach(c => { c.width = width * dpr; c.height = height * dpr; c.style.width = width + 'px'; c.style.height = height + 'px'; });
+        [skyCtx, meteorCtx, sparkleCtx].forEach(ctx => ctx.setTransform(dpr,0,0,dpr,0,0));
+        stars = Array.from({length: Math.max(120, Math.floor(width * height / 6500))}, () => ({ x:Math.random()*width, y:Math.random()*height*.8, r:Math.random()*1.35+.2, a:Math.random()*.7+.2, p:Math.random()*Math.PI*2 }));
+      }
+      function drawSky(t) {
+        skyCtx.clearRect(0,0,width,height);
+        for (const s of stars) { const a = s.a + Math.sin(t*.0012+s.p)*.18; skyCtx.beginPath(); skyCtx.fillStyle = `rgba(255,245,243,${Math.max(.08,a)})`; skyCtx.arc(s.x,s.y,s.r,0,Math.PI*2); skyCtx.fill(); }
+        if (!reduceMotion) requestAnimationFrame(drawSky);
+      }
+      function meteor() {
+        const fromTop = Math.random() < .72;
+        shootingStars.push({ x: Math.random()*width*.95, y: fromTop ? Math.random()*height*.42 : Math.random()*height*.25, vx: -(Math.random()*3+5), vy: Math.random()*2.4+3.7, life: 0, max: 52 + Math.random()*30 });
+      }
+      function drawMeteors() {
+        meteorCtx.clearRect(0,0,width,height);
+        if (!reduceMotion && Math.random() < .055) meteor();
+        shootingStars = shootingStars.filter(m => m.life < m.max);
+        for (const m of shootingStars) {
+          m.life++; m.x += m.vx; m.y += m.vy;
+          const fade = Math.sin(Math.PI * m.life/m.max);
+          const grad = meteorCtx.createLinearGradient(m.x,m.y,m.x-m.vx*8,m.y-m.vy*8);
+          grad.addColorStop(0,`rgba(255,250,244,${fade})`); grad.addColorStop(1,'rgba(255,157,185,0)');
+          meteorCtx.strokeStyle = grad; meteorCtx.lineWidth = 1.5; meteorCtx.beginPath(); meteorCtx.moveTo(m.x,m.y); meteorCtx.lineTo(m.x-m.vx*8,m.y-m.vy*8); meteorCtx.stroke();
+          meteorCtx.fillStyle = `rgba(255,255,255,${fade})`; meteorCtx.beginPath(); meteorCtx.arc(m.x,m.y,1.7,0,Math.PI*2); meteorCtx.fill();
+        }
+        if (!reduceMotion) requestAnimationFrame(drawMeteors);
+      }
+      function drawSparkles() {
+        sparkleCtx.clearRect(0,0,width,height);
+        sparklesList = sparklesList.filter(s => s.life < s.max);
+        for (const s of sparklesList) {
+          s.life++;
+          s.x += s.vx || 0; s.y += s.vy || 0;
+          const p = s.life / s.max, a = Math.sin(Math.PI * p);
+          sparkleCtx.fillStyle = s.trail ? `rgba(255,225,198,${a * .8})` : `rgba(255,190,209,${a})`;
+          sparkleCtx.beginPath();
+          sparkleCtx.arc(s.x, s.y, s.trail ? s.r * (1 - p * .45) : s.r * (1 + p * 2), 0, Math.PI * 2);
+          sparkleCtx.fill();
+        }
+        if (!reduceMotion) requestAnimationFrame(drawSparkles);
+      }
+      function burst(x,y) { for(let i=0;i<28;i++) sparklesList.push({x:x+(Math.random()-.5)*90,y:y+(Math.random()-.5)*70,r:Math.random()*2+1,life:0,max:34+Math.random()*30}); }
+      if (!reduceMotion) {
+        scene.addEventListener('pointermove', (event) => {
+          if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+          const bounds = scene.getBoundingClientRect();
+          const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+          if (lastPointer) {
+            const dx = point.x - lastPointer.x, dy = point.y - lastPointer.y;
+            const steps = Math.min(12, Math.floor(Math.hypot(dx, dy) / 9));
+            for (let i = 1; i <= steps; i++) {
+              sparklesList.push({
+                x: lastPointer.x + dx * i / steps + (Math.random() - .5) * 8,
+                y: lastPointer.y + dy * i / steps + (Math.random() - .5) * 8,
+                vx: (Math.random() - .5) * .6, vy: (Math.random() - .5) * .6,
+                r: Math.random() * 1.8 + .6, life: 0, max: 20 + Math.random() * 18, trail: true
+              });
+            }
+            if (sparklesList.length > 220) sparklesList.splice(0, sparklesList.length - 220);
+          }
+          lastPointer = point;
+        });
+        scene.addEventListener('pointerleave', () => { lastPointer = null; });
+      }
+      resize(); drawSky(0); drawMeteors(); drawSparkles(); addEventListener('resize', resize);
+      if (!reduceMotion) { setInterval(meteor, 2100); }
+
+      const lines = ['今夜的每一颗流星，都在替我说：TYT生日快乐。','愿你的眼睛里，永远住着一整片星河。','愿往后的每一个愿望，都有人陪你实现。'];
+      let lineIndex = 0, timer;
+      function subtitle(text) { const el=$('#subtitle'); el.textContent=text; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+      function playLine() { if (lineIndex < lines.length) { subtitle(lines[lineIndex++]); timer=setTimeout(playLine, 3300); } }
+      $('#startButton').addEventListener('click', () => {
+        if (started) return; started=true; $('#introPanel').classList.add('is-hidden'); $('#letterPanel').classList.remove('is-hidden'); $('#wishStar').classList.remove('hidden-star'); document.querySelectorAll('.dot')[1].classList.add('active'); burst(width/2,height/2); playLine(); toast('星河已为 TYT 点亮。');
+      });
+      $('#wishStar').addEventListener('click', (e) => { e.currentTarget.classList.remove('twinkle'); void e.currentTarget.offsetWidth; e.currentTarget.classList.add('twinkle'); burst(width*.83,height*.22); $('#wishNote').textContent='听见啦。你的愿望，正在变成我们明天的好消息。'; toast('愿望已被星星收藏。'); });
+      let musicPlaying = false;
+      backgroundVideo.playbackRate = 3;
+      backgroundVideo.loop = true;
+      backgroundVideo.muted = true;
+      backgroundAudio.loop = true;
+      backgroundAudio.playbackRate = 1;
+      backgroundAudio.volume = .82;
+      backgroundVideo.play().catch(() => {});
+      async function music(on) {
+        if (on) {
+          backgroundAudio.muted = false;
+          backgroundAudio.playbackRate = 1;
+          try { await backgroundAudio.play(); } catch { toast('请再次点击播放音乐以启动音频。'); return; }
+          musicPlaying = true;
+          $('#soundToggle').classList.remove('off');
+          $('#soundText').textContent = '暂停音乐';
+          $('#soundToggle').setAttribute('aria-pressed','true');
+        } else {
+          musicPlaying = false;
+          backgroundAudio.pause();
+          backgroundAudio.muted = true;
+          $('#soundToggle').classList.add('off');
+          $('#soundText').textContent = '播放音乐';
+          $('#soundToggle').setAttribute('aria-pressed','false');
+        }
+      }
+      $('#soundToggle').addEventListener('click', () => music(!musicPlaying));
+      function toast(text) { const t=$('#toast'); t.textContent=text; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+    })();
+  </script>
+</body>
+</html>
